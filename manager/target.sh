@@ -9,7 +9,6 @@ python3 visualizer.py target &
 cd ../
 python3 ui.py target &
 cd ../utils
-#python3 obigo_control.py target &
 python3 make_data.py target
 
 # cd ~/Documents

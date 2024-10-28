@@ -48,14 +48,13 @@ class MakeData:
 
     def set_protocols(self, type):
         rospy.Subscriber('/novatel/oem7/inspva', INSPVA, self.novatel_inspva_cb)
-        #rospy.Subscriber('/novatel/oem7/odom', Odometry, self.novatel_odom_cb)
+        rospy.Subscriber('/novatel/oem7/odom', Odometry, self.novatel_odom_cb)
         rospy.Subscriber('/novatel/oem7/corrimu', CORRIMU, self.novatel_corrimu_cb)
         rospy.Subscriber(f'/{type}/CommunicationPerformance', Float32MultiArray, self.communication_performance_cb)
     
     def novatel_inspva_cb(self, msg: INSPVA):
         self.car_pos = [msg.longitude, msg.latitude]
         self.car_heading = 89-msg.azimuth
-        self.car_velocity = msg.north_velocity
     
     def novatel_odom_cb(self, msg: Odometry):
         self.car_velocity = msg.twist.twist.linear.x

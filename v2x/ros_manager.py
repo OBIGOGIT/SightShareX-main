@@ -52,7 +52,7 @@ class RosManager:
     
     def publish_calc(self, system):
         self.pub_communication_performance.publish(Float32MultiArray(data=list(system.values())))
-        self.log_system_values(system)
+        #self.log_system_values(system)
     
     def log_system_values(self, system):
         values = list(system.values())
@@ -71,6 +71,7 @@ class RosManager:
         if result == [0,0,0]:
             rospy.logwarn("No Target Share Info to Publish")
             return
+        
         vehicle_state = result[0]
         vehicle_path = result[1]
         vehicle_obstalce = result[2]
