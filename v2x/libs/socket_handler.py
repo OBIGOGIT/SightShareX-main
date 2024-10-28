@@ -151,6 +151,8 @@ class SocketHandler:
             return -1
         if len(data) > SIZE_WSR_DATA:
             self.logger.info(f"                 Received rx_cnt:{self.tx_cnt_from_rx}")
+            print(f"                 Received rx_cnt:{self.tx_cnt_from_rx}")
+
             self.rx_cnt += 1
             self.rx_rate += 1
             hdr_ofs = V2x_App_Hdr.data.offset
@@ -202,14 +204,11 @@ class SocketHandler:
             return self.communication_performance        
 
     def calc_rate(self, hz):
-        if self.rx_rate == 0 or self.rx_rate == self.prev_rx_rate:
-            return -1
-        else:
-            self.prev_rx_rate = self.rx_rate
-            rx_rate = (float(self.rx_rate)/hz)*100
-            self.communication_performance['packet_rate'] = rx_rate
-            self.rx_rate = 0
-            return 1
+        rx_rate = min(100, (float(self.rx_rate)/hz)*100)
+        self.communication_performance['packet_rate'] = rx_rate
+        if self.rx_rate >= hz:
+            self.rx_rate = 1
+        return 1
 
 
     def send(self, data, send_size):
@@ -261,7 +260,6 @@ class SocketHandler:
         self.rx_cnt = 0
         self.tx_cnt_from_rx = 0
         self.rx_rate = 0
-        self.prev_rx_rate = 0
         self.rx_latitude = 0
         self.rx_longtude = 0
         
