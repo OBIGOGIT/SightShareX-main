@@ -102,7 +102,7 @@ class ObigoTest:
         path = []
         for pts in msg.paths:
 		#path.append([pts.pose.x, pts.pose.y])
-            longitude, latitude, _ = self.transformer.transform(msg.pose.x, msg.pose.y, 7)
+            longitude, latitude, _ = self.transformer.transform(pts.pose.x, pts.pose.y, 7)
             path.append([longitude,latitude])
         #print(f"[Ego Share Info] Path-> start: ({path[0][0]},{path[0][1]}) ~ end:({path[-1][0]},{path[-1][1]})")
 
