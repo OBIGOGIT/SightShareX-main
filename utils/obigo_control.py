@@ -1,5 +1,3 @@
-
-
 import rospy
 from datetime import datetime
 import sys
@@ -96,20 +94,22 @@ class ObigoTest:
             'velocity': v,
             'type': self.emergency_type
         }
-        self.send_mqtt('/shar_info',lat_lng_data)
+        self.send_mqtt(f'/{self.type}/shar_info',lat_lng_data)
 
             
         #print(f"[Ego Share Info] State-> latitude: {latitude}, logitude: {longitude}, heading: {yaw}deg, velocity: {v}m/s")
         
         path = []
         for pts in msg.paths:
-            path.append([pts.pose.x, pts.pose.y])
+		#path.append([pts.pose.x, pts.pose.y])
+            longitude, latitude, _ = self.transformer.transform(msg.pose.x, msg.pose.y, 7)
+            path.append([longitude,latitude])
         #print(f"[Ego Share Info] Path-> start: ({path[0][0]},{path[0][1]}) ~ end:({path[-1][0]},{path[-1][1]})")
 
         path_data = {
             'path': path,
         }
-        self.send_mqtt('/shar_info_path',path_data)
+        self.send_mqtt(f'/{self.type}/shar_info_path',path_data)
 
         
         obses = []
@@ -122,7 +122,7 @@ class ObigoTest:
                 'obs_longitude': obs_longitude,
                 'heading': f'{obs.pose.theta}deg'
             }
-            self.send_mqtt('/shar_info_obstacles', obstacles_data)
+            self.send_mqtt(f'/{self.type}/shar_info_obstacles', obstacles_data)
 
 
          
@@ -149,7 +149,7 @@ class ObigoTest:
 
         }
 
-        self.send_mqtt('/communication_performance',performance_data)
+        self.send_mqtt(f'/{self.type}/communication_performance',performance_data)
 
 
     
@@ -161,7 +161,7 @@ class ObigoTest:
         payload = json.dumps({"image": jpg_as_text})
         #print(f"[Ego Emergency Image] Encoded to JSON")
         #print(f"data2-> {msg}")
-        self.send_mqtt('/shar_info_image',{"image": jpg_as_text})
+        self.send_mqtt(f'/{self.type}/shar_info_image',{"image": jpg_as_text})
 
 
     def dangerous_obstacle_cb(self, msg):
@@ -175,7 +175,7 @@ class ObigoTest:
                 'longitude': longitude,
                 'latitude': latitude
             } 
-            self.send_mqtt('/dangerous_obstacle',dangerous_obstacle_data)
+            self.send_mqtt(f'/{self.type}/dangerous_obstacle',dangerous_obstacle_data)
 
 
 
