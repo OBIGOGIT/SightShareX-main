@@ -17,7 +17,7 @@ class RosManager:
         rospy.init_node(f"{type}_v2v_sharing")
         self.v2v_sharing = v2v_sharing
         self.set_values()
-        self.init_log_file()
+        #self.init_log_file()
         self.set_protocol()
         
     def set_values(self):
