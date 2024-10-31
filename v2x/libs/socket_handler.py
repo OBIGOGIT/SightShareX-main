@@ -220,7 +220,7 @@ class SocketHandler:
             self.tx_cnt += 1
             current_time = time.time()
             tx_time = current_time - self.tx_start_time
-            mbps = (send_size/tx_time)/1000000
+            mbps = (send_size*8/tx_time)/1000000
             self.communication_performance['mbps'] = mbps 
             self.tx_start_time = current_time
             return 1
