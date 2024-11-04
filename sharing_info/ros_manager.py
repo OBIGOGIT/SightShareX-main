@@ -115,7 +115,7 @@ class ROSManager:
                 continue
             else:
                 obstacles.append([nx, ny, heading, v_rel, int(d)])
-                if 0 < s < 30:
+                if 0 < s < 100:
                     if s < min_s:
                         dangerous_obstacle = [nx, ny, heading, v_rel, int(distance)]
                         min_s = s

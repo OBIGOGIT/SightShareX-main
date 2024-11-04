@@ -165,9 +165,9 @@ class ObigoTest:
 
 
     def dangerous_obstacle_cb(self, msg):
-        #print(f"Current emergency_type: '{self.emergency_type}'")  # emergency_type 값 확인
+        print(f"Current emergency_type: '{self.emergency_type}'")  # emergency_type 값 확인
 
-        if len(msg.data) > 0 and self.emergency_type.strip() != '정상':
+        if len(msg.data) > 0 and self.emergency_type != '정상':
             longitude, latitude, _ = self.transformer.transform(msg.data[0], msg.data[1], 7)
             #print(f"[Emergency] {self.emergency_type} 비상 상황이 발생했습니다. 위치 -> latitude: {latitude}, logitude: {longitude}")
             dangerous_obstacle_data ={

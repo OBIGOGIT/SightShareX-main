@@ -115,7 +115,7 @@ class MyApp(QMainWindow):
         if not self.sig_in:
             self.sig_in = True
             self.user_input_timer.start(100)
-            QTimer.singleShot(1000, self.stop_user_input_timer)
+            QTimer.singleShot(500, self.stop_user_input_timer)
         else:
             self.stop_user_input_timer
     
