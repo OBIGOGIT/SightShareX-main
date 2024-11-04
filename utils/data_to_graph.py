@@ -6,7 +6,7 @@ import map_config
 from pyproj import Proj, Transformer
 
 # Load the CSV data
-data = pd.read_csv("../log/ego_data_20241031_142548.csv")
+data = pd.read_csv("../log/target_data_20241104_150742_3.csv")
 
 # Constants
 EARTH_RADIUS = 6378137.0  # in meters
