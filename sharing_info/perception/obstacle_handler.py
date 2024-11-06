@@ -99,7 +99,7 @@ class ObstacleHandler:
             return None
     
     def refine_heading_by_lane(self, obs_pos):
-        idnidx = self.phelper.lanelet_matching(obs_pos)
+        idnidx = self.phelper.lanelet_matching2(obs_pos)
         if idnidx is not None:
             waypoints = self.phelper.lanelets[idnidx[0]]['waypoints']
             next_idx = idnidx[1]+3 if idnidx[1]+3 < len(waypoints)-4 else len(waypoints)-4

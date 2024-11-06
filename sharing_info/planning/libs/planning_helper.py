@@ -49,6 +49,30 @@ def lanelet_matching(t_pt):
     else:
         return None
 
+def lanelet_matching2(t_pt):
+    row = int(t_pt[0] // tile_size)
+    col = int(t_pt[1] // tile_size)
+
+    min_dist = float('inf')
+    l_id, l_idx = None, None
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            selected_tile = tiles.get((row+i, col+j))
+            if selected_tile is not None:
+                for id_, data in selected_tile.items():
+                    for idx, pt in enumerate(data['waypoints']):
+                        dist = euc_distance(t_pt, pt)
+                        if dist > 0.5:
+                            continue
+                        if dist < min_dist:
+                            min_dist = dist
+                            l_id = id_
+                            l_idx = data['idx'][idx]
+    if l_id is not None:
+        return (l_id, l_idx)
+    else:
+        return None
+    
 def get_straight_path(idnidx, path_len):
     s_n = idnidx[0]
     s_i = idnidx[1]
@@ -297,3 +321,19 @@ def interpolate_path(final_global_path, sample_rate=3, smoothing_factor=2.5, int
     R_list = calculate_R_list(path_interp_list)
 
     return path_interp_list, R_list
+
+def calc_caution_by_ttc(obstacle, local_pose, ego_vel, th=10):
+    if len(obstacle) < 1:
+        return False
+    obs_vel = obstacle[3]
+    rel_vel = ego_vel - obs_vel
+    if rel_vel > 0:
+        dist = euc_distance(local_pose, [obstacle[0], obstacle[1]])
+        ttc = dist/rel_vel
+    else:
+        ttc = float('inf')
+    
+    if ttc <= th:
+        return True
+    else:
+        return False

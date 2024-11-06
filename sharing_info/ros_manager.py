@@ -12,7 +12,7 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose2D
 from jsk_recognition_msgs.msg import BoundingBoxArray
 from visualization_msgs.msg import Marker, MarkerArray
-from std_msgs.msg import Int8, Float32MultiArray
+from std_msgs.msg import Int8, Float32MultiArray, Bool
 
 def signal_handler(sig, frame):
     rospy.signal_shutdown("SIGINT received")
@@ -39,9 +39,11 @@ class ROSManager:
         self.simulator_state = 0
         self.lidar_obstacles = []
         self.dangerous_obstacle = []
+        self.local_path = None
         self.limit_local_path = None
         self.local_waypoints = None
         self.local_lane_number = None
+        self.obstacle_caution = False
         self.state = 0
         self.target_state = 0
 
@@ -52,7 +54,10 @@ class ROSManager:
 
     def set_protocol(self):
         if self.type == 'target':
-            rospy.Subscriber(f'/{self.type}/TargetShareInfo', ShareInfo, self.target_share_info_cb)
+            if self.simulator is not None:
+                rospy.Subscriber('/ego/EgoShareInfo', ShareInfo, self.target_share_info_cb)
+            else:
+                rospy.Subscriber(f'/{self.type}/TargetShareInfo', ShareInfo, self.target_share_info_cb) 
         rospy.Subscriber('/novatel/oem7/inspva', INSPVA, self.novatel_inspva_cb)
         rospy.Subscriber('/novatel/oem7/odom', Odometry, self.novatel_odom_cb)
         if self.type != 'target':
@@ -62,7 +67,8 @@ class ROSManager:
         rospy.Subscriber(f'/{self.type}/simulator_input', Int8, self.simulator_input_cb)
         self.pub_ego_share_info = rospy.Publisher(f'/{self.type}/EgoShareInfo', ShareInfo, queue_size=1)
         self.pub_dangerous_obstacle = rospy.Publisher(f'/{self.type}/dangerous_obstacle', Float32MultiArray, queue_size=1 )
-
+        if self.type == 'ego':
+            self.pub_obs_caution = rospy.Publisher(f'{self.type}/obs_caution', Bool, queue_size=1)
         self.pub_lmap_viz = rospy.Publisher('/lmap_viz', MarkerArray, queue_size=10,latch=True)
         self.pub_mlmap_viz = rospy.Publisher('/mlmap_viz', MarkerArray, queue_size=10,latch=True)
         self.pub_lmap_viz.publish(self.map.lmap_viz)
@@ -91,10 +97,10 @@ class ROSManager:
     def lidar_cluster_cb(self, msg):
         obstacles = []
         dangerous_obstacle = []
-        min_s = 30
+        min_s = 100
         for obj in msg.boxes:
-            # if obj.header.seq < 10 or obj.dimensions.x < 0.6 or obj.dimensions.y < 0.6:
-                #continue
+            if int(obj.header.seq) < 3:
+                continue
             enu = self.oh.object2enu([obj.pose.position.x, obj.pose.position.y])
             if enu is None:
                 continue
@@ -105,22 +111,47 @@ class ROSManager:
             if heading is None:
                 continue
             distance = self.oh.distance(self.car_pose.x, self.car_pose.y, nx, ny)
-            v_rel = ( obj.value/3.6 if obj.value != 0 else 0 ) + self.car_velocity
-            frenet = self.oh.object2frenet(self.local_waypoints, enu)
+            v_rel = ( obj.value if obj.value != 0 else 0 ) + self.car_velocity
+            frenet = self.oh.object2frenet(self.local_path, enu)
             if frenet is None:
                 continue
             else:
                 s, d = frenet
-            if not self.oh.filtering_by_lane_num(self.local_lane_number, d):
-                continue
-            else:
-                obstacles.append([nx, ny, heading, v_rel, int(d)])
-                if 0 < s < 100:
-                    if s < min_s:
-                        dangerous_obstacle = [nx, ny, heading, v_rel, int(distance)]
-                        min_s = s
+            obstacles.append([nx, ny, heading, v_rel, int(d)])
+            if 0 < s < 100:
+                if s < min_s and -1 < d < 1 :
+                    dangerous_obstacle = [nx, ny, heading, v_rel, int(distance)]
+                    min_s = s
+
         self.lidar_obstacles = obstacles
         self.dangerous_obstacle = dangerous_obstacle
+    
+    def set_sim_obs(self):
+        obstacles = []
+        dangerous_obstacle = []
+        min_s = 100
+        for obj in self.simulator.obstacles:
+            nx = obj[0]
+            ny = obj[1]
+            heading = self.oh.refine_heading_by_lane([nx, ny])
+            if heading is None:
+                continue
+            distance = self.oh.distance(self.car_pose.x, self.car_pose.y, nx, ny)
+            v_rel = ( obj[3] if obj[3] != 0 else 0 ) + self.car_velocity
+            frenet = self.oh.object2frenet(self.local_path, [nx, ny])
+            if frenet is None:
+                continue
+            else:
+                s, d = frenet
+            obstacles.append([nx, ny, heading, v_rel, int(d)])
+            if 0 < s < 100:
+                if s < min_s and -1 < d < 1 :
+                    dangerous_obstacle = [nx, ny, heading, v_rel, int(distance)]
+                    min_s = s
+
+        self.lidar_obstacles = obstacles
+        self.dangerous_obstacle = dangerous_obstacle
+    
 
     def calc_world_pose(self, x, y):
         la, ln, al = self.enu2geo_transformter.transform(x, y, 5)
@@ -132,7 +163,7 @@ class ROSManager:
         self.car_pose.y = self.simulator.y
         self.car_pose.theta = self.simulator.yaw
         self.car_velocity = self.simulator.v
-        self.lidar_obstacles = self.simulator.obstacles
+        self.set_sim_obs()
 
     def organize_share_info(self):
         share_info = ShareInfo()
@@ -164,14 +195,13 @@ class ROSManager:
             share_info.obstacles.append(obstacle)
         
         return share_info
-
     
     def update_value(self):
         rate = rospy.Rate(20)
         while not rospy.is_shutdown() and not self.shutdown_event.is_set() :
             if self.simulator is not None:
                 self.set_sim_pose()
-            self.lpp.update_value([self.car_pose.x, self.car_pose.y], self.car_velocity, self.user_signal, self.target_state)
+            self.lpp.update_value([self.car_pose.x, self.car_pose.y], self.car_velocity, self.user_signal, self.target_state,self.dangerous_obstacle)
             self.oh.update_value([self.car_pose.x, self.car_pose.y], self.car_pose.theta)
             
             rate.sleep()
@@ -181,7 +211,7 @@ class ROSManager:
         while not rospy.is_shutdown() and not self.shutdown_event.is_set():
             lpp_result =  self.lpp.execute()
             if lpp_result is not None:
-                self.local_path, self.limit_local_path, self.local_waypoints, self.local_lane_number = lpp_result
+                self.local_path, self.limit_local_path, self.local_waypoints, self.local_lane_number, self.obstacle_caution = lpp_result
                 self.ct.update_value(self.simulator_state, [self.car_pose.x, self.car_pose.y], self.car_velocity, self.car_pose.theta, self.local_path)
             rate.sleep()
     
@@ -193,6 +223,8 @@ class ROSManager:
                 actuator = self.ct.execute()
                 self.simulator.set_target_actuator(actuator)
             self.pub_ego_share_info.publish(share_info)
+            if self.type == 'ego':
+                self.pub_obs_caution.publish(Bool(self.obstacle_caution))
             self.pub_dangerous_obstacle.publish(Float32MultiArray(data=list(self.dangerous_obstacle)))
             rate.sleep()
 
@@ -226,5 +258,5 @@ class ROSManager:
             thread3.join()
             thread4.join()
         
-        rospy.loginfo("[SharingInfo] ROS Manager has shut down gracefully.")
+        
 

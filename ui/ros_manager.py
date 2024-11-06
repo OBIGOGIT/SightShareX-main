@@ -5,7 +5,7 @@ import numpy as np
 import cv2 
 
 from sightsharex.msg import *
-from std_msgs.msg import Float32MultiArray, Int8
+from std_msgs.msg import Float32MultiArray, Int8, Bool
 from sensor_msgs.msg import CompressedImage
 
 
@@ -24,6 +24,7 @@ class RosManager:
         self.simulator_value = 0
         self.emergency_image_msg = None
         self.compressed_image = None
+        self.obs_caution = False
         self.states = {
             'ego': 0,
             'target': 0
@@ -44,7 +45,7 @@ class RosManager:
         if self.type != 'target':
             rospy.Subscriber('/camera/image_color/compressed', CompressedImage, self.image_callback) #Avanten
             rospy.Subscriber('/gmsl_camera/dev/video0/compressed', CompressedImage, self.image_callback) #IONiQ5
-             
+            rospy.Subscriber(f'{self.type}/obs_caution', Bool, self.obs_caution_cb)
 
         self.pub_user_input = rospy.Publisher(f'/{self.type}/user_input', Int8, queue_size=1)
         self.pub_simulator_input = rospy.Publisher(f'/{self.type}/simulator_input', Int8, queue_size=1)
@@ -60,6 +61,9 @@ class RosManager:
         self.emergency_image_msg = msg
         np_arr = np.frombuffer(msg.data, np.uint8)
         self.compressed_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    
+    def obs_caution_cb(self, msg):
+        self.obs_caution = msg.data
 
     def communication_performance_cb(self, msg):
         state, v2x, rtt, mbps, packet_size, packet_rate, distance = msg.data

@@ -44,7 +44,12 @@ class Visualizer:
         self.pub_ego_dangerous_obstacle_viz = rospy.Publisher(f'{self.type}/visualizer/ego_dangerous_obstacle', MarkerArray, queue_size=1)
         
         rospy.Subscriber(f'/{self.type}/EgoShareInfo', ShareInfo, self.ego_share_info_cb)
-        rospy.Subscriber(f'/{self.type}/TargetShareInfo', ShareInfo, self.target_share_info_cb)
+        if self.type == 'target':
+            rospy.Subscriber('/ego/EgoShareInfo', ShareInfo, self.target_share_info_cb)
+        else:
+            rospy.Subscriber('/target/EgoShareInfo', ShareInfo, self.target_share_info_cb)
+
+        #rospy.Subscriber(f'/{self.type}/TargetShareInfo', ShareInfo, self.target_share_info_cb)
         rospy.Subscriber(f'/{self.type}/dangerous_obstacle', Float32MultiArray, self.dangerous_obstacle_cb)
 
         rospy.loginfo("Visualizer set")
@@ -66,7 +71,7 @@ class Visualizer:
         viz_path = path_viz(path, self.ego_color)
         obses = []
         for obs in msg.obstacles:
-            obses.append([obs.pose.x, obs.pose.y, obs.pose.theta, obs.id.data])
+            obses.append([obs.pose.x, obs.pose.y, obs.pose.theta, obs.velocity.data*3.6])
         viz_obstacles = ObstaclesViz(obses, "ego")
         self.pub_ego_obstacles_viz.publish(viz_obstacles)
         self.pub_ego_path_viz.publish(viz_path)
@@ -90,7 +95,7 @@ class Visualizer:
         viz_path = path_viz(path, self.target_color)
         obses = []
         for obs in msg.obstacles:
-            obses.append([obs.pose.x, obs.pose.y, obs.pose.theta,  obs.id.data])
+            obses.append([obs.pose.x, obs.pose.y, obs.pose.theta,  obs.velocity.data*3.6])
         viz_obstacles = ObstaclesViz(obses, "target")
         self.pub_target_obstacles_viz.publish(viz_obstacles)
         self.pub_target_path_viz.publish(viz_path)

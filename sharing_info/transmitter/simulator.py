@@ -36,13 +36,15 @@ class Vehicle:
         return self.x, self.y, self.yaw, self.v
 
 class Simulator:
-    def __init__(self, map):
+    def __init__(self, map, type, scenario):
         self.ego = None
+        self.type = type
+        self.scenario = scenario
         self.x = 0
         self.y = 0
         self.yaw = 0
         self.v = 0
-        self.obstacles = [] 
+        self.obstacles = []
 
         self._steer = 0
         self._accel = 0
@@ -100,7 +102,25 @@ class Simulator:
         elif map == 'KIAPI_Racing':
             self.ego = Vehicle(0, 0, 1.664)
         elif map == 'Solbat':
-            self.ego = Vehicle(825.153, -580.183, -0.658)
+            if self.scenario == 1:
+                if self.type == 'target':
+                    self.ego = Vehicle(943.767, -664.643, -0.663)
+                else:
+                    self.ego = Vehicle(976.832, -690.212, -0.695)
+                self.obstacles=[[1165.085, -836.513, -0.661, -13, 1]]
+            elif self.scenario == 2:
+                if self.type == 'target':
+                    self.ego = Vehicle(1295.802, -941.692, -0.686)
+                else:
+                    self.ego = Vehicle(1308.494, -951.816, -0.6905)
+                self.obstacles=[[1392.366, -1016.544, -0.637, -13, 1]]
+            else:
+                if self.type == 'target':
+                    self.ego = Vehicle( 1505.094, -1104.367, -0.635)
+                else:
+                    self.ego = Vehicle( 1519.274, -1111.868, -0.635)
+                self.obstacles = [[1605.827, -1178.705, -0.711, -13, 1]]
+                    
     
     def execute(self, shutdown_event):
         rate = rospy.Rate(20)

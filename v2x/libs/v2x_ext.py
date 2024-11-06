@@ -81,6 +81,19 @@ class TLVC_Overall(Structure):
         ("crc", c_uint16)           # 2 bytes, 네트워크 바이트 오더로 설정해야 함
     ]
 
+class TLVC_Overall_V2(Structure):
+    _pack_ = 1  # 메모리 정렬을 1바이트 단위로 설정
+    _fields_ = [
+        ("type", c_uint32),         # 4 bytes, 네트워크 바이트 오더로 설정해야 함
+        ("len", c_uint16),          # 2 bytes, 네트워크 바이트 오더로 설정해야 함
+        ("magic", c_char * 4),      # 4 bytes
+        ("version", c_uint8),       # 1 byte
+        ("num_package", c_uint8),   # 1 byte
+        ("len_package", c_uint16),  # 2 bytes, 네트워크 바이트 오더로 설정해야 함
+        ("bitwize", c_uint8),
+        ("crc", c_uint16)           # 2 bytes, 네트워크 바이트 오더로 설정해야 함
+    ]
+
 class TLVC_STATUS_CommUnit(Structure):
     _pack_ = 1  # 모든 필드가 메모리에 밀집되게 패킹
     _fields_ = [

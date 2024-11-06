@@ -9,8 +9,10 @@ KPH_TO_MPS = 1 / 3.6
 MPS_TO_KPH = 3.6
 
 class LocalPathPlanner:
-    def __init__(self, map):
+    def __init__(self, map, type, scenario):
         self.MAP = map
+        self.type = type
+        self.scenario = scenario
         self.setting_values()
     
     def setting_values(self):
@@ -39,11 +41,12 @@ class LocalPathPlanner:
         self.max_path_len = 30
         self.default_len = 120
     
-    def update_value(self, local_pose, velocity, signal, target_state):
+    def update_value(self, local_pose, velocity, signal, target_state, dangerous_obstacle):
         self.local_pose = local_pose
         self.current_velocity = velocity
         self.current_signal = signal
         self.target_state = target_state
+        self.dangerous_obstacle = dangerous_obstacle
     
     def current_lane_waypoints(self, local_pose): 
         idnidx = phelper.lanelet_matching(local_pose)
@@ -65,7 +68,7 @@ class LocalPathPlanner:
         else:
             return 1
     
-    def check_planner_state(self):
+    def check_planner_state(self, caution):
         if self.local_path == None:
             return 'INIT'
         if self.current_signal == 3:
@@ -80,7 +83,7 @@ class LocalPathPlanner:
                 self.temp_signal = self.current_signal
                 self.change_state = True
                 return 'EMERGENCY_CHANGE'
-            elif self.temp_signal != self.current_signal and self.target_state in [4,5,6,7]:
+            elif self.temp_signal != self.target_state and self.target_state in [4,5,6,7]:
                 self.temp_signal = self.target_state
                 self.change_state = True
                 return 'EMERGENCY_CHANGE'
@@ -113,6 +116,8 @@ class LocalPathPlanner:
         c_pt = wps[-1]
         l_id, r_id = self.phelper.get_neighbor(uni[0])
         n_id = r_id if r_id is not None else l_id
+        if self.scenario == 2:
+            n_id = l_id if self.type == 'ego' else r_id
         if n_id is not None:
             r = self.MAP.lanelets[n_id]['waypoints']
             u_n = n_id
@@ -174,13 +179,17 @@ class LocalPathPlanner:
     def execute(self):
         if self.local_pose is None or self.local_pose[0] == 'inf':
             return None
-        
-        pstate = self.check_planner_state()
+        if self.type == 'ego':
+            caution = self.phelper.calc_caution_by_ttc(self.dangerous_obstacle, self.local_pose, self.current_velocity)
+        else:
+            caution = False
+
+        pstate = self.check_planner_state(caution)
         self.local_path = self.make_path(pstate, self.local_pose)
         if self.local_path == None or len(self.local_path) <= 0:
             return None
         #self.local_path, local_kappa = self.phelper.interpolate_path(local_path)
         local_waypoints, local_lane_number = self.current_lane_waypoints(self.local_pose)
         limit_local_path = self.phelper.limit_path_length(self.local_path, self.max_path_len)
-        return self.local_path, limit_local_path, local_waypoints, local_lane_number
+        return self.local_path, limit_local_path, local_waypoints, local_lane_number, caution
 

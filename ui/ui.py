@@ -53,6 +53,7 @@ class MyApp(QMainWindow):
         self.state_buttons = [self.ui.normalButton, self.ui.leftButton, self.ui.rightButton, self.ui.straightButton, self.ui.carAccidentButton, self.ui.pedestrianAccidentButton, self.ui.carBrokenButton, self.ui.fallenObjectButton]
         self.simulator_buttons = [self.ui.stopButton, self.ui.startButton,  self.ui.initializeButton]
         self.prev_state = 0
+        self.obs_caution_state = False
 
     def set_widgets(self):
         self.rviz_widget = RvizWidget(self, self.type)
@@ -65,14 +66,24 @@ class MyApp(QMainWindow):
 
         self.user_input_timer = QTimer(self)
         self.user_input_timer.timeout.connect(self.state_triggered)
-        self.user_input_timer.start(500)
+        self.user_input_timer.start(1000)
 
+        self.obs_caution_timer = QTimer(self)   
+        self.obs_caution_timer.timeout.connect(self.obs_caution_init)
+        
 
     def updateUI(self):
         self.table_update(self.RM.communication_performance)
         self.state_update(self.RM.states)
         self.image_update(self.RM.compressed_image)
-        
+        if not self.obs_caution_state and self.RM.obs_caution:
+            self.click_state(4)
+            self.obs_caution_state = True
+            self.obs_caution_timer.start(20000)
+    
+    def obs_caution_init(self):
+        self.obs_caution_state = False
+
     def table_update(self, communication_performance):
         self.ui.tableWidget.setItem(-1, 1, QTableWidgetItem(communication_performance['comulative_time']))
         self.ui.tableWidget.setItem(0, 1, QTableWidgetItem(communication_performance['distance']))
@@ -85,14 +96,13 @@ class MyApp(QMainWindow):
         ego_state = int(states['ego'])
         target_state = int(states['target'])
         self.ui.egoLabel.setText(self.ego_state_string[ego_state])
-        
         self.ui.targetLabel.setText(self.target_state_string[target_state])
+        
         for i, state_button in enumerate(self.state_buttons):
             if i == ego_state:
                 state_button.setStyleSheet("QPushButton {background-color: #0066ff;color: white;}")
             else:
                 state_button.setStyleSheet("QPushButton {background-color: #eeeeec; color: black;}")
-        
 
     def image_update(self, compressed_image):
         if compressed_image is not None:
@@ -130,7 +140,6 @@ class MyApp(QMainWindow):
         self.RM.publish()
         if self.RM.user_value in [4,5,6,7]:
             self.ui.cameraLabel.setStyleSheet("QLabel {background-color: red;}")
-            
         
     def initUI(self):
         self.set_conntection()

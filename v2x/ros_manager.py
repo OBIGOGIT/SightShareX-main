@@ -174,7 +174,6 @@ class RosManager:
             thread3.join()
             thread4.join()
         
-        rospy.loginfo("ROSManager has shut down gracefully.")
         return sharing_state
         
         
