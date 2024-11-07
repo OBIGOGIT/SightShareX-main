@@ -1,15 +1,15 @@
 #!/bin/bash
 
 cd ../sharing_info
-python3 main.py ego Solbat 0 &
+python3 main.py ego Solbat 0 1&
 cd ../v2x
-python3 main.py ego 0 &
+python3 main.py ego 0 in&
 cd ../ui/visualizer
 python3 visualizer.py ego &
 cd ../
 python3 ui.py ego &
 cd ../utils
-python3 obigo_control.py ego &
+# python3 obigo_control.py ego &
 python3 make_data.py ego &
 # cd plotjuggler/
 # rosrun plotjuggler plotjuggler -l communication_performance.xml &

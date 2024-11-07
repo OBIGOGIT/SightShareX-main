@@ -44,12 +44,12 @@ class Visualizer:
         self.pub_ego_dangerous_obstacle_viz = rospy.Publisher(f'{self.type}/visualizer/ego_dangerous_obstacle', MarkerArray, queue_size=1)
         
         rospy.Subscriber(f'/{self.type}/EgoShareInfo', ShareInfo, self.ego_share_info_cb)
-        if self.type == 'target':
-            rospy.Subscriber('/ego/EgoShareInfo', ShareInfo, self.target_share_info_cb)
-        else:
-            rospy.Subscriber('/target/EgoShareInfo', ShareInfo, self.target_share_info_cb)
+        # if self.type == 'target':
+        #     rospy.Subscriber('/ego/EgoShareInfo', ShareInfo, self.target_share_info_cb)
+        # else:
+        #     rospy.Subscriber('/target/EgoShareInfo', ShareInfo, self.target_share_info_cb)
 
-        #rospy.Subscriber(f'/{self.type}/TargetShareInfo', ShareInfo, self.target_share_info_cb)
+        rospy.Subscriber(f'/{self.type}/TargetShareInfo', ShareInfo, self.target_share_info_cb)
         rospy.Subscriber(f'/{self.type}/dangerous_obstacle', Float32MultiArray, self.dangerous_obstacle_cb)
 
         rospy.loginfo("Visualizer set")
