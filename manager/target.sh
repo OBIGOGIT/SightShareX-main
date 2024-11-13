@@ -3,7 +3,7 @@
 cd ../sharing_info
 python3 main.py target Solbat 0 &
 cd ../v2x
-python3 main.py target 0 &
+python3 main.py target 0 in&
 cd ../ui/visualizer
 python3 visualizer.py target &
 cd ../
