@@ -6,31 +6,18 @@ import map_config
 from pyproj import Proj, Transformer
 
 # Load the CSV data
-data = pd.read_csv("../log/target_data_20241104_150742_3.csv")
+data = pd.read_csv("../log/ego_data_20241112_211345.csv")
 
 # Constants
 EARTH_RADIUS = 6378137.0  # in meters
 
-proj_wgs84 = Proj(proj='latlong', datum='WGS84') 
-base_lla = map_config.get_base_lla("Solbat")
-proj_enu = Proj(proj='aeqd', datum='WGS84', lat_0=base_lla[0], lon_0=base_lla[1], h_0=base_lla[2])
-geo2enu_transformer = Transformer.from_proj(proj_wgs84, proj_enu)
-
-# Conversion to ENU coordinates
-def latlon_to_enu(lat, lon):
-    e,n,u =  geo2enu_transformer.transform(lon, lat, 5)
-    return e,n
-
-# Apply the ENU conversion
-enu_coordinates = data.apply(lambda row: latlon_to_enu(row["latitude"], row["longitude"]), axis=1)
-data["east"], data["north"] = zip(*enu_coordinates)
-print(enu_coordinates)
 # Plotting
 time = range(len(data))  # seconds based on the number of rows
 
 # 1. Path (ENU coordinates)
 plt.figure(figsize=(10, 6))
-plt.plot(data["east"], data["north"], linestyle='-', color='b')
+# plt.plot(data["east"], data["north"], linestyle='-', color='b')
+plt.plot(data["x"], data["y"], linestyle='-', color='b')
 plt.title("Path of the Car (ENU Coordinates)")
 plt.xlabel("East (m)")
 plt.ylabel("North (m)")

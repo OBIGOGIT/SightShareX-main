@@ -11,7 +11,7 @@ from novatel_oem7_msgs.msg import INSPVA
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose2D
 from jsk_recognition_msgs.msg import BoundingBoxArray
-from visualization_msgs.msg import Marker, MarkerArray
+from visualization_msgs.msg import MarkerArray
 from std_msgs.msg import Int8, Float32MultiArray, Bool
 
 def signal_handler(sig, frame):

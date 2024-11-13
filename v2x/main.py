@@ -1,7 +1,6 @@
 import sys
 from ros_manager import RosManager
 from v2v_sharing import V2VSharing
-from v2v_sharing_b import V2VSharingB
 
 def main():
     if len(sys.argv) != 4:
@@ -13,10 +12,7 @@ def main():
         interface = int(sys.argv[2]) #0: local, 1: ethernet, 2: usb ethernet
         chip = str(sys.argv[3]) # in, out
     
-    if chip == 'out':
-        v2v_sharing = V2VSharingB(type, interface)
-    else:
-        v2v_sharing = V2VSharing(type, interface)
+    v2v_sharing = V2VSharing(type, interface, chip)
         
     ros_manager = RosManager(v2v_sharing, type)
     if ros_manager.execute() < 0:

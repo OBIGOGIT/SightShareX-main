@@ -43,6 +43,9 @@ class MyApp(QMainWindow):
 
     def set_values(self):
         self.sig_in = False
+        self.sig_in_viz = False
+        self.state = 0
+        self.target_state = 0
         if self.type == 'target':
             self.ego_state_string = ['정상', '차선 변경 수락', '차선 변경 거절', '', '차량 사고 인지','보행자 사고 인지', '고장 차량 인지', '낙하물 인지' ]
             self.target_state_string = ['정상', '우측 합류 요청', '좌측 합류 요청', '직진 초기화','차량 사고 감지','보행자 사고 감지', '고장 차량 감지', '낙하물 감지']
@@ -66,10 +69,14 @@ class MyApp(QMainWindow):
 
         self.user_input_timer = QTimer(self)
         self.user_input_timer.timeout.connect(self.state_triggered)
-        self.user_input_timer.start(1000)
+        self.user_input_timer.start(200)
 
         self.obs_caution_timer = QTimer(self)   
         self.obs_caution_timer.timeout.connect(self.obs_caution_init)
+
+        self.user_input_viz_timer = QTimer(self)
+        self.user_input_viz_timer.timeout.connect(self.state_triggered_viz)
+        self.user_input_viz_timer.start(1000)
         
 
     def updateUI(self):
@@ -93,17 +100,25 @@ class MyApp(QMainWindow):
         self.ui.tableWidget.setItem(4, 1, QTableWidgetItem(communication_performance['packet_rate']))
 
     def state_update(self, states):
-        ego_state = int(states['ego'])
+        ego_state = int(self.state)
         target_state = int(states['target'])
+
+        if self.target_state != target_state and target_state != 0:
+            self.target_state = target_state
+            if self.type == 'target':
+                self.click_state(target_state)
+            else:
+                self.check_viz_timer()
+
         self.ui.egoLabel.setText(self.ego_state_string[ego_state])
-        self.ui.targetLabel.setText(self.target_state_string[target_state])
+        self.ui.targetLabel.setText(self.target_state_string[self.target_state])
         
         for i, state_button in enumerate(self.state_buttons):
             if i == ego_state:
                 state_button.setStyleSheet("QPushButton {background-color: #0066ff;color: white;}")
             else:
                 state_button.setStyleSheet("QPushButton {background-color: #eeeeec; color: black;}")
-
+        
     def image_update(self, compressed_image):
         if compressed_image is not None:
             height, width, channel = compressed_image.shape
@@ -115,7 +130,9 @@ class MyApp(QMainWindow):
 
     def click_state(self, value):
         self.RM.user_value = value
+        self.state = value
         self.check_timer()
+        self.check_viz_timer()
     
     def click_simulator(self, value):
         self.RM.simulator_value = value
@@ -124,23 +141,39 @@ class MyApp(QMainWindow):
     def check_timer(self):
         if not self.sig_in:
             self.sig_in = True
-            self.user_input_timer.start(100)
-            QTimer.singleShot(500, self.stop_user_input_timer)
+            self.user_input_timer.start(200)
+            QTimer.singleShot(1600, self.stop_user_input_timer)
         else:
-            self.stop_user_input_timer
+            self.stop_user_input_timer()
+    
+    def check_viz_timer(self):
+        if not self.sig_in_viz:
+            self.sig_in_viz = True
+            self.user_input_viz_timer.start(1000)
+            QTimer.singleShot(10000, self.stop_user_input_viz_timer)
+
     
     def stop_user_input_timer(self):
         self.sig_in = False
         self.RM.user_value = 0
-        self.ui.cameraLabel.setStyleSheet("QLabel {background-color: white;}")
         self.user_input_timer.stop()
         self.RM.publish()
 
     def state_triggered(self):
         self.RM.publish()
-        if self.RM.user_value in [4,5,6,7]:
+
+    
+    def state_triggered_viz(self):
+        if self.state in [4,5,6,7]:
             self.ui.cameraLabel.setStyleSheet("QLabel {background-color: red;}")
-        
+    
+    def stop_user_input_viz_timer(self):
+        self.sig_in_viz = False
+        self.state = 0
+        self.target_state = 0
+        self.ui.cameraLabel.setStyleSheet("QLabel {background-color: white;}")
+        self.user_input_viz_timer.stop()        
+
     def initUI(self):
         self.set_conntection()
         self.ui.rvizLayout.addWidget(self.rviz_widget)

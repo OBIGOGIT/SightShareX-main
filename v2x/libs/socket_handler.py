@@ -12,12 +12,12 @@ from .crc16 import calc_crc16
 
 DEST_PORT = 47347
 V2V_PSID = EM_V2V_MSG
-IP = '192.168.1.11'
 
 class SocketHandler:
-    def __init__(self, type, interface):
+    def __init__(self, type, interface, chip):
         self.interface = interface
         self.interface_list = [b'', b'enp4s0', b'enx00e04c6a3d90']
+        self.chip = chip
         self.communication_performance = {
             'state': 0,
             'v2x': 0,
@@ -32,10 +32,10 @@ class SocketHandler:
         self.set_logger(type)
 
     def set_logger(self, type):
-        self.logger = logging.getLogger('v2v_communication')
+        self.logger = logging.getLogger('v2x')
         self.logger.setLevel(logging.DEBUG)
         formatted_datetime = datetime.today().strftime('%m%d%H%M')
-        file_handler = logging.FileHandler(f'./log/{type}_{formatted_datetime}.log')
+        file_handler = logging.FileHandler(f'./log/{self.chip}_{type}_{formatted_datetime}.log')
         file_handler.setLevel(logging.DEBUG)
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.DEBUG)
@@ -45,7 +45,7 @@ class SocketHandler:
         self.logger.addHandler(file_handler)
         #self.logger.addHandler(console_handler)
 
-    def connect(self):
+    def connect(self, IP):
         try:
             self.fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.interface > 0:
@@ -90,7 +90,10 @@ class SocketHandler:
         self.set_tx_values(state)
 
         size = sizeof(V2x_App_SI_TLVC)+sizeof(ObstacleInformation)*len(obstacles)
-        p_dummy = cast(addressof(p_overall.contents) + sizeof(TLVC_Overall_V2), POINTER(V2x_App_SI_TLVC))
+        if self.chip == 'out':
+            p_dummy = cast(addressof(p_overall.contents) + sizeof(TLVC_Overall_V2), POINTER(V2x_App_SI_TLVC))
+        else:
+            p_dummy = cast(addressof(p_overall.contents) + sizeof(TLVC_Overall), POINTER(V2x_App_SI_TLVC))
         p_dummy.contents.type = socket.htonl(EM_PT_RAW_DATA)
         p_dummy.contents.len = socket.htons(size + 2)
 
@@ -129,7 +132,10 @@ class SocketHandler:
 
         self.add_ext_status_data(p_overall, package_len)
 
-        self.hdr.contents.len = socket.ntohs(sizeof(V2x_App_Hdr)+6+sizeof(TLVC_Overall_V2)+socket.ntohs(p_overall.contents.len_package))
+        if self.chip == 'out':
+            self.hdr.contents.len = socket.ntohs(sizeof(V2x_App_Hdr)+6+sizeof(TLVC_Overall_V2)+socket.ntohs(p_overall.contents.len_package))
+        else:
+            self.hdr.contents.len = socket.ntohs(sizeof(V2x_App_Hdr)+6+sizeof(TLVC_Overall)+socket.ntohs(p_overall.contents.len_package))
         self.hdr.contents.seq = 0
         self.hdr.contents.payload_id = socket.htons(0x10)
         self.tx_msg.contents.psid = socket.htonl(EM_V2V_MSG)
@@ -150,14 +156,14 @@ class SocketHandler:
         if data == None:
             return -1
         if len(data) > SIZE_WSR_DATA:
-            self.logger.info(f"                 Received rx_cnt:{self.tx_cnt_from_rx}")
-            print(f"                 Received rx_cnt:{self.tx_cnt_from_rx}")
-
             self.rx_cnt += 1
             self.rx_rate += 1
             hdr_ofs = V2x_App_Hdr.data.offset
             rx_ofs = V2x_App_RxMsg.data.offset
-            ovr_ofs = sizeof(TLVC_Overall_V2)
+            if self.chip == 'out':
+                ovr_ofs = sizeof(TLVC_Overall_V2)
+            else:
+                ovr_ofs = sizeof(TLVC_Overall)
             tlvc_ofs =  hdr_ofs+rx_ofs+ovr_ofs
             tlvc = V2x_App_SI_TLVC.from_buffer_copy(data,tlvc_ofs)
             sharing_information = tlvc.data
@@ -171,6 +177,7 @@ class SocketHandler:
                 obstacles.append(obstacle)
             state, path, obstacles = self.organize_data(len(data), sharing_information, obstacles)
             rx_message = self.get_log_datum(state, path, obstacles)
+            self.logger.info(f"Rx cnt:{self.tx_cnt_from_rx}")
             self.logger.info(rx_message)
             return [state, path, obstacles]
         else:
@@ -214,7 +221,7 @@ class SocketHandler:
     def send(self, data, send_size):
         try:
             self.fd.sendall(data)
-            self.logger.info(f"Sent tx_cnt:{self.tx_cnt}")
+            self.logger.info(f"Tx cnt:{self.tx_cnt}")
             self.logger.info(self.tx_message)
             self.rtt_ts_list.append([self.tx_cnt, time.time()])
             self.tx_cnt += 1
@@ -271,15 +278,22 @@ class SocketHandler:
             return 1
 
     def get_p_overall(self, cnt):
-        p_overall = cast(addressof(self.tx_msg.contents)+V2x_App_TxMsg.data.offset, POINTER(TLVC_Overall_V2))
+        if self.chip == 'out':
+            p_overall = cast(addressof(self.tx_msg.contents)+V2x_App_TxMsg.data.offset, POINTER(TLVC_Overall_V2))
+        else:
+            p_overall = cast(addressof(self.tx_msg.contents)+V2x_App_TxMsg.data.offset, POINTER(TLVC_Overall))
         p_overall.contents.type = socket.htonl(EM_PT_OVERALL)
         p_overall.contents.len = socket.htons(sizeof(TLVC_Overall_V2)-6)
         p_overall.contents.magic=b'EMOP'
         p_overall.contents.version = 1
         p_overall.contents.num_package = cnt
-        p_overall.contents.bitwize = 0x77
+        if self.chip == 'out':
+            p_overall.contents.bitwize = 0x77
         crc_data = bytearray(p_overall.contents)
-        p_overall.contents.crc = socket.htons(calc_crc16(crc_data, sizeof(TLVC_Overall_V2)-2))
+        if self.chip == 'out':
+            p_overall.contents.crc = socket.htons(calc_crc16(crc_data, sizeof(TLVC_Overall_V2)-2))
+        else:
+            p_overall.contents.crc = socket.htons(calc_crc16(crc_data, sizeof(TLVC_Overall)-2))
         return p_overall
 
     def organize_data(self, data_size, sharing_information, obstacles):
@@ -297,12 +311,18 @@ class SocketHandler:
 
 
     def add_ext_status_data(self, p_overall, package_len):
-        p_status = cast(addressof(p_overall.contents)+sizeof(TLVC_Overall_V2)+package_len, POINTER(TLVC_STATUS_CommUnit))
+        if self.chip == 'out':
+            p_status = cast(addressof(p_overall.contents)+sizeof(TLVC_Overall_V2)+package_len, POINTER(TLVC_STATUS_CommUnit))
+        else:
+            p_status = cast(addressof(p_overall.contents)+sizeof(TLVC_Overall)+package_len, POINTER(TLVC_STATUS_CommUnit))
         p_overall.contents.num_package += 1
         package_len += sizeof(TLVC_STATUS_CommUnit)
         p_overall.contents.len_package = socket.htons(package_len)
         crc_data = bytearray(addressof(p_overall.contents))
-        p_overall.contents.crc = socket.htons(calc_crc16(crc_data, sizeof(TLVC_Overall_V2)-2))
+        if self.chip == 'out':
+            p_overall.contents.crc = socket.htons(calc_crc16(crc_data, sizeof(TLVC_Overall_V2)-2))
+        else:
+            p_overall.contents.crc = socket.htons(calc_crc16(crc_data, sizeof(TLVC_Overall)-2))
         p_status.contents.type = socket.htonl(EM_PT_STATUS)
         p_status.contents.len = socket.htons(sizeof(TLVC_STATUS_CommUnit)-6)
         p_status.contents.dev_type = eV2x_App_Ext_Status_DevType.eStatusDevType_Obu
@@ -339,7 +359,7 @@ class SocketHandler:
     
     def get_log_datum(self, vehicle_state, vehicle_path, vehicle_obstacles):
         if len(vehicle_state) > 0:
-            state = f"state:{vehicle_state[0]} lat:{vehicle_state[2]} lng:{vehicle_state[3]} h:{vehicle_state[4]} v:{vehicle_state[5]}\n"
+            state = f"Shared Message\nstate:{vehicle_state[0]} lat:{vehicle_state[2]} lng:{vehicle_state[3]} h:{vehicle_state[4]} v:{vehicle_state[5]}\n"
         else:
             state = "No message to Send\n"
         if vehicle_path != [] and len(vehicle_path[0]) > 1:
@@ -350,9 +370,9 @@ class SocketHandler:
         obstacles_info = ""
         if len(vehicle_obstacles) > 0:
             for i, obs in enumerate(vehicle_obstacles):
-                obstacles_info += f"[{i}] cls:{obs[0]} enu_x:{obs[1]} enu_y:{obs[2]} h:{obs[3]} v:{obs[4]}\n"
+                obstacles_info += f"[{i}] cls:{obs[0]} enu_x:{obs[1]} enu_y:{obs[2]} h:{obs[3]} v:{obs[4]}\n\n"
         return state+path+obstacle_number+obstacles_info
 
     def get_performance_log(self):
-        performance_str = "Communication Performance " + " ".join([f"{key}: {value}" for key, value in self.communication_performance.items()])
-        return performance_str
+        performance_str = "Communication Performance \n" + " ".join([f"{key}: {value}" for key, value in self.communication_performance.items()])
+        return performance_str+"\n\n"

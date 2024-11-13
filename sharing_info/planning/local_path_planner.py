@@ -29,6 +29,8 @@ class LocalPathPlanner:
         self.change_id = None
 
         self.local_path = None
+        self.local_lane_number = 1
+        self.prev_lane_number = 1
         self.temp_signal = 0
         self.threshold_gap = 2.5
 
@@ -116,8 +118,9 @@ class LocalPathPlanner:
         c_pt = wps[-1]
         l_id, r_id = self.phelper.get_neighbor(uni[0])
         n_id = r_id if r_id is not None else l_id
-        if self.scenario == 2:
+        if self.prev_lane_number == 1 and self.local_lane_number == 2:
             n_id = l_id if self.type == 'ego' else r_id
+
         if n_id is not None:
             r = self.MAP.lanelets[n_id]['waypoints']
             u_n = n_id
@@ -189,7 +192,10 @@ class LocalPathPlanner:
         if self.local_path == None or len(self.local_path) <= 0:
             return None
         #self.local_path, local_kappa = self.phelper.interpolate_path(local_path)
-        local_waypoints, local_lane_number = self.current_lane_waypoints(self.local_pose)
+        local_waypoints, self.local_lane_number = self.current_lane_waypoints(self.local_pose)
         limit_local_path = self.phelper.limit_path_length(self.local_path, self.max_path_len)
-        return self.local_path, limit_local_path, local_waypoints, local_lane_number, caution
+        if self.local_lane_number != self.prev_lane_number:
+            self.pre_lane_number = self.local_lane_number
+
+        return self.local_path, limit_local_path, local_waypoints, self.local_lane_number, caution
 

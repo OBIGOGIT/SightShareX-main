@@ -1,0 +1,20 @@
+communication performance information 
+
+2024-11-11 17:00:53,785 - v2v_communication - INFO - Communication Performance 
+state: 0 v2x: 1 rtt: 206 mbps: 0.014127838708371457 packet_size: 364 packet_rate: 100 distance: 41.79791629042722
+
+
+Tx information
+2024-11-11 17:00:53,937 - v2v_communication - INFO - Sent tx_cnt:21
+2024-11-11 17:00:53,937 - v2v_communication - INFO - state:0 lat:976.832 lng:-690.212 h:-39.820566761592204 v:0.0
+path: x=976.8805916287625 y=980.0443043282322 ~ x=-690.1852771797298 y=-692.6329124755678
+There are 1 obstacles
+[0] cls:0 enu_x:1165.085 enu_y:-836.513 h:-37.83577377608535 v:-13.0
+
+
+Rx information
+2024-11-11 17:00:53,981 - v2v_communication - INFO - Received rx_cnt:13
+2024-11-11 17:00:53,981 - v2v_communication - INFO - state:0 lat:943.7670288085938 lng:-664.6430053710938 h:-37.98710250854492 v:0.0
+path: x=943.7733764648438 y=946.9609985351562 ~ x=-664.5270385742188 y=-666.9423828125
+There are 1 obstacles
+[0] cls:0 enu_x:1165.0849609375 enu_y:-836.5130004882812 h:-37.83577346801758 v:-13.0

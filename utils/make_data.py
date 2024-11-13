@@ -13,6 +13,8 @@ setproctitle.setproctitle("make_data")
 from novatel_oem7_msgs.msg import INSPVA, CORRIMU
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float32MultiArray
+from sightsharex.msg import *
+
 
 def signal_handler(sig, frame):
     rospy.signal_shutdown("SIGINT received")
@@ -33,7 +35,7 @@ class MakeData:
         if not os.path.exists(self.csv_file):
             with open(self.csv_file, mode='w', newline='') as file:
                 writer = csv.writer(file)
-                writer.writerow(["latitude", "longitude", "car_heading", "car_velocity",
+                writer.writerow(["state", "x", "y", "car_heading", "car_velocity",
                                  "lateral_acc", "longitudinal_acc", "packet_rate",
                                  "rtt", "speed", "car_distance"])
 
@@ -42,23 +44,22 @@ class MakeData:
         self.car_pos = [0,0] #lat, long
         self.car_heading = 0
         self.car_velocity = 0
+        self.car_state = 0
         self.car_accel = [0,0] #lat, long
         self.comm_perform = [0,0,0] #packet rate, rtt, speed
         self.car_distance = 0
 
     def set_protocols(self, type):
-        rospy.Subscriber('/novatel/oem7/inspva', INSPVA, self.novatel_inspva_cb)
-        rospy.Subscriber('/novatel/oem7/odom', Odometry, self.novatel_odom_cb)
         rospy.Subscriber('/novatel/oem7/corrimu', CORRIMU, self.novatel_corrimu_cb)
+        rospy.Subscriber(f'/{type}/EgoShareInfo', ShareInfo, self.share_info_cb)
         rospy.Subscriber(f'/{type}/CommunicationPerformance', Float32MultiArray, self.communication_performance_cb)
     
-    def novatel_inspva_cb(self, msg: INSPVA):
-        self.car_pos = [msg.longitude, msg.latitude]
-        self.car_heading = 89-msg.azimuth
-    
-    def novatel_odom_cb(self, msg: Odometry):
-        self.car_velocity = msg.twist.twist.linear.x
-    
+    def share_info_cb(self, msg):
+        self.car_pos = [msg.pose.x, msg.pose.y]
+        self.car_heading = msg.pose.theta
+        self.car_velocity = msg.velocity.data
+        self.car_state = msg.state.data
+
     def novatel_corrimu_cb(self, msg: CORRIMU):
         self.car_accel = [msg.lateral_acc, msg.longitudinal_acc]
     
@@ -69,7 +70,7 @@ class MakeData:
     def write_to_csv(self):
         with open(self.csv_file, mode='a', newline='') as file:
             writer = csv.writer(file)
-            writer.writerow([self.car_pos[1], self.car_pos[0], self.car_heading,
+            writer.writerow([self.car_state, self.car_pos[0], self.car_pos[1], self.car_heading,
                              self.car_velocity, self.car_accel[0], self.car_accel[1],
                              self.comm_perform[0], self.comm_perform[1], self.comm_perform[2],
                              self.car_distance])
