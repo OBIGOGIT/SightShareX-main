@@ -71,6 +71,9 @@ class ObstacleHandler:
         
         if len(trim_path) > 0:  
             centerline = np.array([(point[0], point[1]) for point in trim_path])
+            if centerline.shape[0] < 2:
+                return None  # Or handle this case accordingly
+
             point = np.array(obs_pose)
 
             tangents = np.gradient(centerline, axis=0)

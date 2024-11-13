@@ -3,7 +3,7 @@
 cd ../sharing_info
 python3 main.py ego Solbat 0 1&
 cd ../v2x
-python3 main.py ego 0 in&
+python3 main.py ego 0 out&
 cd ../ui/visualizer
 python3 visualizer.py ego &
 cd ../
