@@ -186,7 +186,8 @@ class LocalPathPlanner:
             caution = self.phelper.calc_caution_by_ttc(self.dangerous_obstacle, self.local_pose, self.current_velocity)
         else:
             caution = False
-
+        caution = False
+        
         pstate = self.check_planner_state(caution)
         self.local_path = self.make_path(pstate, self.local_pose)
         if self.local_path == None or len(self.local_path) <= 0:

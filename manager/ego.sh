@@ -9,7 +9,7 @@ python3 visualizer.py ego &
 cd ../
 python3 ui.py ego &
 cd ../utils
-# python3 obigo_control.py ego &
+python3 obigo_control.py ego &
 python3 make_data.py ego &
 # cd plotjuggler/
 # rosrun plotjuggler plotjuggler -l communication_performance.xml &
