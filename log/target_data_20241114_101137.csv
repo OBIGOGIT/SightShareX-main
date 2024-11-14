@@ -1,0 +1,5 @@
+state,x,y,car_heading,car_velocity,lateral_acc,longitudinal_acc,packet_rate,rtt,speed,car_distance
+0,0,0,0,0,0,0,0,0,0,0
+0,0,0,0,0,0.0,0.0,0,0,0,0
+0,0,0,0,0,0.0,0.0,0,0,0,0
+0,2075.158867107782,1442.3063987190565,89.0,0.001951694837771356,0.0,0.0,0,0,0,0
