@@ -1,0 +1,15 @@
+.table .text {
+	position: relative;
+}
+.table .text span {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	position: absolute;
+	left: 5px;
+	right: 2px;
+}
+.text:before {
+	content: '';
+	display: inline-block;
+}

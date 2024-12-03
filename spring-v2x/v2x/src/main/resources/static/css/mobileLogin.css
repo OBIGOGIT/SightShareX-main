@@ -1,0 +1,30 @@
+.form-group .form-control {
+	width: 273px;
+    height: 33px;
+
+    background: #FFFFFF;
+    border: 0.3px solid #333333;
+    box-sizing: border-box;
+    
+    color: #9E9E9E;
+}
+
+#btnSignIn, #pwForgot, #createAcc{
+    width: 273px;
+    height: 33px;
+
+    background: #FFFFFF;
+    border: 0.3px solid #333333;
+    box-sizing: border-box;
+    border-radius: 20px;
+
+    color: #333333;
+}
+
+* {
+    font-family: Roboto;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 14px;
+}

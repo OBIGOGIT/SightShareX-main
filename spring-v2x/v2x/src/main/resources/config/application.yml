@@ -1,0 +1,67 @@
+spring:
+  profiles:
+    active: dev
+  devtools:
+    livereload:
+      enabled: true
+    thymeleaf:
+      cache: false
+  mvc:
+    view:
+      prefix: /WEB-INF/view
+      suffix: .jsp
+  jpa:
+    database: postgresql
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+mqtt:
+  broker:
+    url: 210.216.54.151
+    port: 1883
+management:
+  endpoint:
+    health:
+      show-details: always
+  endpoints:
+    web:
+      exposure:
+        #        include: busrefresh
+        include: busrefresh, prometheus, health
+  health:
+    diskspace:
+      enabled: false
+    ratelimiters:
+      enabled: true
+    circuitbreakers:
+      enabled: true # circuitbreakers 정보 노출
+      retryevents:
+        enabled: true # retryevents 정보 노출
+  metrics:
+    tags:
+      application: v2x
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+        resilience4j:
+          circuitbreaker:
+            calls: true
+
+
+
+json:
+  result:
+    cmd: '{"result": "%s", "cmd": "%s"}'
+    fail: '{"result": "failed"}'
+    fail1: '{"result": "failed", "desc": "%s"}'
+    fail2: '{"result": "failed", "code": "%s", "desc": "%s"}'
+    ok: '{"result": "ok"}'
+    ok1: '{"result": "ok", "desc": "%s"}'
+    ok2: '{"result": "ok", "desc": "%d"}'
+    sysinfo: '{"result": "ok", "cpu": "%s", "memory": "%s", "network": "%s"}'

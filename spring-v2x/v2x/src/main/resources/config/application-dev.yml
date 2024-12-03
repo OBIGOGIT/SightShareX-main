@@ -1,0 +1,29 @@
+
+server:
+  port: 8090
+spring:
+  jpa:
+    show-sql: false
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://10.28.2.120:5432/v2xdb?createDatabaseIfNotExist=true&autoReconnect=true&useSSL=false
+    userName: v2x
+    password: "@TesttesT@"
+    validation-query: SELECT 1
+    validation-interval: 0
+
+obigo:
+  path:
+    file: D:\v2x\image\
+  resourcePath: file:///D:\v2x\image\
+#-------------------------------------------------------
+# log setting
+# trace > debug > info > warn > error
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+    org:
+      springframework: error
+  # logback config file
+  config: "classpath:logback/logback-spring.xml"

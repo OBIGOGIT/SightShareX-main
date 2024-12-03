@@ -1,0 +1,116 @@
+<%@ include file="./declare.jspf" %>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.2/dist/tailwind.min.css" rel="stylesheet">
+<%--    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">--%>
+
+    <!-- Flowbite CSS -->
+    <link href="https://unpkg.com/flowbite@latest/dist/flowbite.min.css" rel="stylesheet">
+
+    <!-- Grid.js CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
+    <link rel="stylesheet" href="/dist/css/Cabin-obigo.css">
+    <!-- Pure Datepicker CSS (Optional) -->
+    <!-- YearSelect Plugin JS -->
+
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@latest/dist/l10n/ko.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/yearSelect/yearSelect.js"></script>
+    <script src="/js/sockjs.min.js"></script>
+    <script src="/js/stomp.min.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+    <!-- Axios -->
+    <script src="/js/axios.min.js"></script>
+
+    <!-- Utils -->
+    <script src="/js/utils.js"></script>
+    <script src="/js/util.js"></script>
+
+
+    <!-- Custom String Utilities -->
+    <script src="/js/string.js"></script>
+
+    <!-- Grid.js -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gridjs/6.2.0/gridjs.production.min.js"></script>
+
+    <!-- Flowbite JavaScript -->
+    <script src="https://unpkg.com/flowbite@latest/dist/flowbite.min.js"></script>
+
+    <script src="/js/include/tailwindUtil.js" defer></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        body {
+            font-family: 'San Francisco', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4ff;
+            color: #1a202c;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+
+        /* Navbar 스타일 */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 0.75rem 1rem;
+            color: #333;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar .text-xl {
+            font-weight: bold;
+            color: #007aff;
+        }
+
+
+        main {
+            margin-top: 55px;
+            padding-top: 0.2rem;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            /*padding-top: 1rem;     !* 상단 패딩 *!*/
+            /*padding-left: 1rem;    !* 좌측 패딩 *!*/
+            /*padding-right: 1rem;   !* 우측 패딩 *!*/
+            /*padding-bottom: 1rem;     !* 하단 패딩 0으로 설정 *!*/
+            background-color: #f0f4ff;
+            box-sizing: border-box;
+        }
+
+        .map-container {
+            flex-grow: 1;
+            display: flex;
+        }
+
+        #map {
+            flex-grow: 1;
+            height: 100%;
+            width: 100%;
+        }
+
+    </style>
+
+</head>

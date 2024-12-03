@@ -1,0 +1,26 @@
+server:
+  port: 9095
+
+#-------------------------------------------------------
+# log setting
+# trace > debug > info > warn > error
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://10.28.2.120:5432/v2xdb?createDatabaseIfNotExist=true&autoReconnect=true&useSSL=false
+    userName: v2x
+    password: "@TesttesT@"
+    validation-query: SELECT 1`
+    validation-interval: 0
+
+obigo:
+  path:
+    file: /home/obigo/v2x/image/
+  resourcePath: file:///home/obigo/v2x/image/
+
+logging:
+  level:
+    org:
+      springframework: error
+  # logback config file
+  config: "classpath:logback/logback-spring-linux.xml"

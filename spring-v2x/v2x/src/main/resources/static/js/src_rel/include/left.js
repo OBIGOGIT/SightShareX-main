@@ -1,0 +1,1 @@
+window.addEventListener("DOMContentLoaded",function(){Log.d("left.js -> DOMContentLoaded() called...")});var menuProductLink=function(a,b,c){a="/product/list.do?productType=%s&productName=%s".sprintf(b,c);Log.d("menuProductLink() -> link : ",a);mv(a)};

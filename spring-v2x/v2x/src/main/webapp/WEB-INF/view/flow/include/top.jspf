@@ -1,0 +1,16 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8;" pageEncoding="UTF-8"%>
+
+<!-- Navbar -->
+
+<nav class="navbar p-4">
+	<div class="flex items-center">
+		<div class="text-white text-xl font-bold ml-4 mr-8">V2X Server</div>
+		<div class="flex space-x-4">
+			<a href="/main" class="text-black text-lg">Dashboard</a>
+			<a href="/performance" class="text-black text-lg">OBU Data</a>
+			<a href="/object" class="text-black text-lg">Obejct List</a>
+			<a href="/apikey" class="text-black text-lg">MY Key</a>
+			<a href="/docs/index.html" class="text-black text-lg">API INFO</a>
+		</div>
+	</div>
+</nav>
